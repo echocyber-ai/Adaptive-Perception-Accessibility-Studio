@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-accent="signal">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap">
+    <title>Lab3-(HCI:BSAI-239)</title>
+    <style>
+        /* ===== Design tokens: every theme checked once (text 4.5:1+, UI borders 3:1+) ===== */
+        :root {
+            --bg: #0c1220; --bg2: #111a2c; --card: #141e33; --fg: #e8edf7; --mut: #a3afc6;
+            --ac: #4fd1c5; --acfg: #052e2b; --bd: #6a7898; --line: #26324f; --soft: rgba(79, 209, 197, .12);
+            --sh: 0 14px 34px -18px rgba(0, 0, 0, .75); --ok: #5ee6a8; --bad: #ff9b8f; --r: 16px;
+            --serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
+            --sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px)
+        }
+        :root[data-theme=dark][data-accent=plasma] { --ac: #a5b4fc; --acfg: #14163a; --soft: rgba(165, 180, 252, .13) }
+        :root[data-theme=dark][data-accent=ion] { --ac: #f2c46d; --acfg: #2a1b00; --soft: rgba(242, 196, 109, .12) }
+        :root[data-theme=light] {
+            --bg: #f3f5f9; --bg2: #e8ecf4; --card: #fff; --fg: #0f1a2e; --mut: #44526b;
+            --ac: #0b6f78; --acfg: #fff; --bd: #6b7a94; --line: #dbe1ec; --soft: rgba(11, 111, 120, .09);
+            --sh: 0 12px 30px -16px rgba(16, 28, 60, .28); --ok: #0a6b2e; --bad: #b3170f
+        }
+        :root[data-theme=light][data-accent=plasma] { --ac: #4f46e5; --soft: rgba(79, 70, 229, .09) }
+        :root[data-theme=light][data-accent=ion] { --ac: #a15c07; --soft: rgba(161, 92, 7, .09) }
+        :root[data-theme=contrast] {
+            --bg: #000; --bg2: #000; --card: #000; --fg: #fff; --mut: #fff; --ac: #ffee00; --acfg: #000;
+            --bd: #fff; --line: #fff; --soft: transparent; --sh: none; --ok: #00ff7f; --bad: #ff7b72
+        }
+        @media (prefers-color-scheme: light) {
+            :root:not([data-theme]) { --bg: #f3f5f9; --card: #fff; --fg: #0f1a2e; --mut: #44526b; --ac: #0b6f78; --acfg: #fff; --bd: #6b7a94 }
+        }
+
+        html { scroll-padding-top: env(safe-area-inset-top, 0px) }
+        *, *::before, *::after { box-sizing: border-box }
+        body { margin: 0; font: 400 1rem/1.65 var(--sans); background: radial-gradient(900px 420px at 88% -8%, var(--soft), transparent 65%), var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased }
+        [hidden] { display: none !important }
+        :focus-visible { outline: 3px solid var(--fg); outline-offset: 3px }
+        .skip { position: absolute; left: .5rem; top: -4rem; background: var(--ac); color: var(--acfg); padding: .7rem 1.1rem; border-radius: 999px; z-index: 99; font-weight: 700 }
+        .skip:focus { top: .5rem }
+        .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+        .top, main, footer { max-width: 70rem; margin: 0 auto; padding: 1rem }
+
+        /* ===== Header ===== */
+        .brandrow { display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: space-between; align-items: flex-end; padding-top: .9rem }
+        h1 { font: 600 clamp(1.9rem, 4.6vw, 3rem)/1.1 var(--serif); letter-spacing: -.02em; margin: 0; overflow-wrap: anywhere }
+        h1 .cur { display: inline-block; width: .26em; height: .26em; border-radius: 50%; background: var(--ac); margin-left: .12em; vertical-align: .08em }
+        .tag-line { margin: .6rem 0 0; color: var(--mut); max-width: 46ch }
+        .opts { display: grid; grid-template-columns: repeat(2, minmax(8rem, 1fr)); gap: .7rem 1rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); padding: .9rem 1rem; box-shadow: var(--sh) }
+        .opts label { display: block; font: 600 .78rem/1.2 var(--sans); margin-bottom: .3rem; color: var(--mut); letter-spacing: .02em }
+        .opts select { width: 100% }
+        .opts .sw { grid-column: 1 / -1 }
+
+        h2 { font: 600 clamp(1.5rem, 3.4vw, 2rem)/1.2 var(--serif); letter-spacing: -.015em; margin: .5rem 0 .5rem }
+        h3 { font: 700 1.1rem/1.35 var(--sans); margin: 0 0 .5rem }
+        h4 { margin: .2rem 0 .4rem }
+        p, li { max-width: 72ch }
+        .lede { color: var(--mut); margin: 0 0 1rem }
+        .row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center }
+        .row.top-al { align-items: flex-start }
+        .mut { color: var(--mut) }
+        .mono { font-family: var(--mono) }
+
+        /* ===== Tabs: pill control with a sliding indicator ===== */
+        [role=tablist] { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 1.5rem; padding: 6px; border: 1px solid var(--line); border-radius: 20px; background: var(--card); box-shadow: var(--sh) }
+        #tabInd { display: none; position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 14px; background: var(--ac); box-shadow: 0 8px 20px -10px var(--ac); transition: transform .35s cubic-bezier(.3, .9, .3, 1), width .35s cubic-bezier(.3, .9, .3, 1), height .35s }
+        .has-ind #tabInd { display: block }
+        [role=tab] {
+            position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; text-align: left;
+            min-height: 3.5rem; padding: .6rem 1rem; border: 0; border-radius: 14px; background: transparent; color: var(--fg);
+            font: 700 .98rem/1.25 var(--sans); cursor: pointer; transition: background .2s, color .2s
+        }
+        [role=tab] small { font: 500 .76rem/1.3 var(--sans); color: var(--mut); transition: color .2s }
+        [role=tab]:hover { background: var(--soft) }
+        [role=tab][aria-selected=true] { background: var(--ac); color: var(--acfg) }
+        [role=tab][aria-selected=true] small { color: var(--acfg); opacity: .85 }
+        .has-ind [role=tab][aria-selected=true], .has-ind [role=tab][aria-selected=true]:hover { background: transparent }
+        section[role=tabpanel] { animation: rise .4s ease both }
+        @keyframes rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+
+        /* ===== Cards & controls ===== */
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 1.25rem 1.35rem; margin: 1.1rem 0; box-shadow: var(--sh); transition: border-color .2s, box-shadow .2s }
+        .card:hover { border-color: var(--bd) }
+        .card.hot, .card.tele { box-shadow: inset 0 3px 0 var(--ac), var(--sh) }
+        .btn, button, select, input[type=text], input[type=email], input[type=color], input[type=number] { font: inherit; min-height: 2.75rem }
+        .btn, button.btn { background: var(--ac); color: var(--acfg); border: 2px solid var(--ac); border-radius: 999px; padding: .5rem 1.3rem; cursor: pointer; font-weight: 700; transition: transform .12s, box-shadow .2s, filter .2s; box-shadow: 0 8px 18px -12px var(--ac) }
+        button:not(.btn):not([role=tab]):not([role=switch]) { background: transparent; color: var(--fg); border: 1.5px solid var(--bd); border-radius: 999px; padding: .5rem 1.1rem; cursor: pointer; font-weight: 600; transition: background .2s, transform .12s, border-color .2s }
+        button:not([role=tab]):not([role=switch]):hover { transform: translateY(-1px) }
+        button:not(.btn):not([role=tab]):not([role=switch]):hover { background: var(--soft); border-color: var(--fg) }
+        .btn:hover { filter: brightness(1.08); box-shadow: 0 12px 22px -12px var(--ac) }
+        button:not([role=tab]):not([role=switch]):active { transform: translateY(1px) scale(.98) }
+        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important }
+        input[type=text], input[type=email], input[type=number], select { background: var(--bg2); color: var(--fg); border: 1.5px solid var(--bd); border-radius: 10px; padding: .4rem .7rem; transition: border-color .2s, box-shadow .2s }
+        input[type=text]:hover, input[type=email]:hover, input[type=number]:hover, select:hover { border-color: var(--fg) }
+        input[type=text]:focus, input[type=email]:focus, input[type=number]:focus, select:focus { box-shadow: 0 0 0 3px var(--soft) }
+        input[type=text].hex { font-family: var(--mono); width: 7.5rem }
+        input[type=number].num { width: 4.6rem; font-family: var(--mono) }
+        input[type=color] { width: 3.6rem; padding: .15rem; border: 1.5px solid var(--bd); border-radius: 10px; background: var(--bg2); cursor: pointer }
+        input[type=checkbox], input[type=radio] { width: 1.35rem; height: 1.35rem; vertical-align: middle; accent-color: var(--ac); cursor: pointer }
+        input[type=range] { accent-color: var(--ac); min-width: 8rem }
+        input[aria-invalid=true] { border-color: var(--bad) !important }
+        label { display: inline-block }
+        .field { margin: .75rem 0 }
+        .field label { display: block; font-weight: 700; margin-bottom: .2rem }
+        .err { color: var(--bad); font-weight: 600 }
+        .toast { min-height: 2.75rem; border: 1.5px dashed var(--bd); border-radius: 12px; padding: .55rem .8rem; margin-top: .75rem; font-family: var(--mono); font-size: .9rem }
+        .chip { display: inline-flex; align-items: center; gap: .35rem; border: 1.5px solid var(--bd); border-radius: 999px; padding: .05rem .7rem; font: 600 .78rem/1.6 var(--mono); background: var(--bg2); transition: background .15s, color .15s }
+        .chip.on { background: var(--ac); color: var(--acfg); border-color: var(--ac) }
+
+        [role=switch] { display: inline-flex; align-items: center; gap: .75rem; min-height: 2.75rem; background: transparent; color: var(--fg); border: 0; padding: .2rem 0; font: 600 .95rem var(--sans); cursor: pointer }
+        [role=switch] .trk { width: 3.2rem; height: 1.7rem; border: 1.5px solid var(--bd); border-radius: 999px; background: var(--bg2); position: relative; flex: none; transition: background .2s, border-color .2s }
+        [role=switch] .trk::after { content: ""; position: absolute; top: 50%; left: 3px; width: 1.2rem; height: 1.2rem; margin-top: -.6rem; border-radius: 50%; background: var(--fg); transition: transform .2s cubic-bezier(.3, .9, .3, 1) }
+        [role=switch][aria-checked=true] .trk { background: var(--ac); border-color: var(--ac) }
+        [role=switch][aria-checked=true] .trk::after { transform: translateX(1.45rem); background: var(--acfg) }
+
+        .acc button { display: block; width: 100%; text-align: left; border-radius: 12px !important; margin-top: .4rem }
+        .acc [role=region] { padding: .8rem 1rem; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg2); margin-top: .3rem }
+        .menu { position: absolute; background: var(--card); border: 1.5px solid var(--bd); border-radius: 14px; padding: .3rem; z-index: 5; min-width: 11rem; box-shadow: var(--sh) }
+        .menu button { display: block; width: 100%; text-align: left; border: 0 !important; border-radius: 10px !important }
+        dialog { background: var(--card); color: var(--fg); border: 1px solid var(--bd); border-radius: 20px; max-width: 26rem; padding: 1.4rem; box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .6) }
+        dialog::backdrop { background: rgba(5, 10, 20, .7); backdrop-filter: blur(3px) }
+        pre { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: .8rem; overflow-x: auto; white-space: pre-wrap }
+        code { font-family: var(--mono) }
+        .wrap { overflow: auto; border: 1px solid var(--bd); border-radius: 14px; background: var(--card); padding: .6rem }
+        fieldset { border: 1px solid var(--line); border-radius: 14px; margin: .75rem 0; min-width: 0; padding: .7rem 1rem }
+        legend { font-weight: 700; padding: 0 .5rem }
+        progress { width: 100%; height: .8rem; accent-color: var(--ac); border-radius: 999px }
+        details summary { cursor: pointer; font-weight: 700; min-height: 2.75rem; display: flex; align-items: center }
+
+        /* ===== Telemetry ===== */
+        .tele-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .6rem }
+        .live { display: inline-flex; align-items: center; gap: .5rem; font: 600 .82rem var(--sans); color: var(--mut) }
+        .live i { width: .65rem; height: .65rem; border-radius: 50%; background: var(--ok); display: inline-block; animation: pulse 1.8s ease-in-out infinite }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--ok) } 70% { box-shadow: 0 0 0 7px transparent } }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .7rem; margin: .7rem 0 }
+        .stat { border: 1px solid var(--line); border-radius: 14px; background: var(--bg2); padding: .6rem .8rem; transition: border-color .2s }
+        .stat:hover { border-color: var(--ac) }
+        .stat b { display: block; font: 600 1.9rem/1.1 var(--serif); font-variant-numeric: tabular-nums }
+        .stat span { font: 500 .78rem var(--sans); color: var(--mut) }
+        .lastkey { display: flex; flex-wrap: wrap; gap: .8rem; align-items: stretch; margin: .7rem 0 }
+        .lastkey .big { flex: 1 1 10rem; border: 1.5px solid var(--ac); border-radius: 14px; background: var(--bg2); padding: .6rem .9rem; min-width: 0 }
+        .lastkey .big b { display: block; font: 500 1.9rem/1.25 var(--mono); overflow-wrap: anywhere }
+        .lastkey .big span { font: 500 .78rem var(--sans); color: var(--mut) }
+        .klog { font: .85rem/1.5 var(--mono); list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--bg2); max-height: 17rem; overflow: auto }
+        .klog li { padding: .35rem .75rem; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; max-width: none }
+        .klog li:last-child { border-bottom: 0 }
+        .klog .t { color: var(--mut) }
+        .klog .k { font-weight: 600; color: var(--ac) }
+
+        /* ===== Contrast lab ===== */
+        .cgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1rem }
+        .ch-row { display: flex; align-items: center; gap: .55rem; margin: .35rem 0; flex-wrap: wrap }
+        .ch-row label { width: 1.4rem; font: 600 .95rem var(--mono) }
+        input[type=range].ch { -webkit-appearance: none; appearance: none; height: 1.1rem; flex: 1 1 8rem; border: 1.5px solid var(--bd); border-radius: 999px; background: var(--trk, #888); padding: 0; min-height: 0 }
+        input[type=range].ch::-webkit-slider-thumb { -webkit-appearance: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--card); border: 3px solid var(--fg); box-shadow: 0 2px 8px rgba(0, 0, 0, .35); transition: transform .12s }
+        input[type=range].ch::-webkit-slider-thumb:hover { transform: scale(1.12) }
+        input[type=range].ch::-moz-range-thumb { width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--card); border: 3px solid var(--fg) }
+        .bigratio { display: flex; flex-wrap: wrap; align-items: baseline; gap: .8rem; margin: .6rem 0 }
+        .bigratio b { font: 600 clamp(2.4rem, 7vw, 3.6rem)/1 var(--serif); letter-spacing: -.02em; font-variant-numeric: tabular-nums }
+        .meter { position: relative; height: .7rem; border-radius: 999px; border: 1px solid var(--bd); background: var(--bg2); margin: .5rem 0 1.7rem }
+        .meter i { position: absolute; inset: 0 auto 0 0; background: var(--ac); border-radius: 999px; transition: width .35s cubic-bezier(.3, .9, .3, 1) }
+        .meter u { position: absolute; top: -.25rem; bottom: -.25rem; width: 2px; background: var(--fg); text-decoration: none }
+        .meter u span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font: 500 .72rem var(--mono); color: var(--mut); margin-top: .15rem }
+        .res { list-style: none; padding: 0; margin: .6rem 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .4rem .8rem }
+        .res li { border: 1px solid var(--line); border-radius: 10px; padding: .35rem .75rem; background: var(--bg2); max-width: none }
+        .pf { font: 600 .88rem var(--mono) }
+        .pv { padding: 1.1rem; border: 1px solid var(--bd); border-radius: 14px; margin: .8rem 0; transition: background .2s, color .2s }
+        .pv .ui { display: inline-block; margin-top: .5rem; padding: .35rem 1rem; border: 3px solid currentColor; border-radius: 999px; font-weight: 700 }
+        .presets { display: flex; flex-wrap: wrap; gap: .5rem }
+        .presets button { display: inline-flex; align-items: center; gap: .55rem }
+        .presets i { width: 1.7rem; height: 1.25rem; border: 1px solid var(--fg); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font: 700 .72rem var(--sans); font-style: normal }
+        .vstat { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .6rem; margin: .7rem 0 }
+        .vstat div { border: 1px solid var(--line); border-radius: 12px; background: var(--bg2); padding: .5rem .8rem; font-size: .92rem }
+        .vstat b { font-family: var(--sans) }
+
+        /* ===== Tracker ===== */
+        .ihead { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin: .6rem 0 }
+        .igrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 0 1.1rem }
+        .igrid .card h4 { font: 700 1.02rem var(--sans) }
+        .lvl { font: 600 .72rem var(--mono); border: 1.5px solid var(--bd); border-radius: 999px; padding: 0 .55rem; margin-left: .4rem }
+
+        /* ===== Report ===== */
+        .rp { font-size: .95rem }
+        .rp h3 { margin: 1.2rem 0 .4rem }
+        .rp .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .7rem; margin: .8rem 0 }
+        .rp .tile { border: 1.5px solid var(--fg); border-radius: 14px; padding: .6rem .8rem }
+        .rp .tile b { display: block; font: 600 1.8rem/1.1 var(--serif) }
+        .rp table { border-collapse: collapse; width: 100%; margin: .4rem 0 }
+        .rp th, .rp td { border: 1px solid var(--bd); padding: .4rem .6rem; text-align: left; vertical-align: top }
+        .rp th { background: var(--bg2) }
+        .rp .tw { overflow-x: auto }
+        #rep { border: 1px solid var(--line); border-radius: var(--r); background: var(--card); padding: 1.2rem; min-height: 6rem }
+        #printOut { display: none }
+        .sumbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .7rem; margin: .7rem 0 }
+        .sumbar div { border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: .6rem .9rem; font: 500 .85rem var(--sans) }
+
+        /* ===== Vision profile helpers ===== */
+        .vwrap { position: relative }
+        #vpov { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; color: #fff; font-weight: 700; padding: 1rem; pointer-events: none; z-index: 3; border-radius: 14px }
+        #vpinfo { border: 1.5px solid var(--ac); border-radius: 14px; background: var(--bg2); padding: .7rem 1rem; margin: .7rem 0 }
+        .srl { font: .88rem/1.55 var(--mono); padding-left: 1.4rem; margin: .4rem 0 0 }
+        .srl li { max-width: none }
+        .srl .warn { color: var(--bad); font-weight: 600 }
+
+        /* ===== Sample UI (the test subject keeps its own fixed styling) ===== */
+        /* ===== Sample UI (fixed light surface so Before/After compare fairly) ===== */
+        .sm { background: #fff; color: #111; padding: 1rem; font-size: 1em }
+        .sm h2 { font: 700 1.4em Georgia, serif; letter-spacing: 0; margin: .2em 0 }
+        .sm h3, .sm h5 { font-size: 1.1em; letter-spacing: 0 }
+        .sm.good { max-width: 100% }
+        .sm.good * { max-width: 100% }
+        .sm.good p { color: #444 }
+        .sm.good a { color: #0a4fa3 }
+        .sm.good button { background: #0b5c63; color: #fff; border: 2px solid #0b5c63; padding: .4em .9em; min-height: 2.75rem; cursor: pointer }
+        .sm.good input { border: 2px solid #555; padding: .4em; background: #fff; color: #111; min-height: 2.75rem }
+        .sm.good label { display: block; font-weight: 600 }
+        .sm.good .er { color: #a4170f; font-weight: 600; display: block }
+        .sm.good :focus-visible { outline: 3px solid #0a4fa3; outline-offset: 2px }
+        .sm.good td, .sm.good th { border: 1px solid #555; padding: .3em }
+        .sm.bad { width: 600px; font-size: .875em }
+        .sm select { background: #fff; color: #111; border: 2px solid #555; padding: .3em .5em; font: inherit; border-radius: 0 }
+        .bad .hd { display: flex; justify-content: space-between }
+        .bad .lc { color: #aaa }
+        .bad a { color: #7ab }
+        .bad *:focus { outline: none }
+        .bad .clk { display: inline-block; background: #2b7a82; color: #fff; padding: 8px 14px; cursor: pointer }
+        .bad input { border: 1px solid #ddd; padding: 6px; background: #fff; color: #111 }
+        .bad .redb { border: 2px solid #d33 }
+        .bad td { border: 1px solid #ccc; padding: 4px }
+        .sp * { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important }
+        .sp p { margin-bottom: 2em !important }
+
+        @media (max-width: 44rem) { [role=tablist] { grid-template-columns: repeat(2, 1fr) } .opts { width: 100% } }
+        @media (max-width: 26rem) { [role=tablist] { grid-template-columns: 1fr } }
+        :root[data-motion=reduce] *, :root[data-motion=reduce] *::before, :root[data-motion=reduce] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
+
+        /* ===== Print: strip navigation, tabs and buttons; show only the report ===== */
+        @media print {
+            @page { margin: 14mm }
+            html, body { background: #fff !important; color: #000 !important }
+            .skip, .top, main, footer, .noprint, [role=tablist], button, dialog { display: none !important }
+            #printOut {
+                display: block !important; font: 11pt/1.45 var(--sans); color: #000; background: #fff;
+                --fg: #000; --bg: #fff; --bg2: #eee; --card: #fff; --bd: #555; --line: #999; --mut: #333; --ok: #0a6b2e; --bad: #a4170f
+            }
+            #printOut h1 { font-size: 22pt; letter-spacing: -.02em; margin: 0 0 4pt }
+            #printOut h1 .cur { display: none }
+            #printOut table { page-break-inside: auto }
+            #printOut tr { page-break-inside: avoid }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="skip" href="#main">Skip to main content</a>
+    <div id="announce" class="sr" role="status" aria-live="polite"></div>
+
+    <header class="top">
+        <div class="brandrow">
+            <div>
+                <h1>Lab3-(HCI:BSAI-239)<span class="cur" aria-hidden="true"></span></h1>
+                <p class="tag-line">Test keyboard flow, contrast, zoom and color vision. Fix a broken UI. Ship a WCAG 2.1 AA report.</p>
+            </div>
+            <div class="opts" role="group" aria-label="Display options">
+                <div><label for="theme">Theme</label>
+                    <select id="theme"><option value="dark">Dark</option><option value="light">Light</option><option value="contrast">High contrast</option></select></div>
+                <div><label for="accent">Accent</label>
+                    <select id="accent"><option value="signal">Teal</option><option value="plasma">Violet</option><option value="ion">Amber</option></select></div>
+                <div class="sw"><button type="button" role="switch" aria-checked="false" id="motionSw"><span class="trk" aria-hidden="true"></span>Reduce motion</button></div>
+            </div>
+        </div>
+        <div role="tablist" aria-label="Lab modules" id="maintabs">
+            <div id="tabInd" aria-hidden="true"></div>
+            <button role="tab" id="t1" aria-controls="p1" aria-selected="true">Keyboard and ARIA<small>patterns + telemetry</small></button>
+            <button role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">Contrast and zoom<small>RGB, WCAG, CVD</small></button>
+            <button role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1">Fix the UI<small>14 planted defects</small></button>
+            <button role="tab" id="t4" aria-controls="p4" aria-selected="false" tabindex="-1">Audit report<small>checklist + print</small></button>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+
+        <!-- ================= MODULE 1 ================= -->
+        <section role="tabpanel" id="p1" aria-labelledby="t1" tabindex="-1">
+            <h2>Keyboard and screen reader lab</h2>
+            <p class="lede">Use only the keyboard here. Each card lists what to test and the ARIA it uses. Prefer native HTML; ARIA fills gaps native elements cannot.</p>
+
+            <div class="card hot">
+                <h3>Tabs: roving focus</h3>
+                <p><strong>Test:</strong> Tab to the module tabs at the top. Left, Right, Home and End move between tabs. Enter or Space activates the focused tab and moves focus straight into the first control of its panel.
+                    <strong>ARIA:</strong> tablist, tab, tabpanel, aria-selected, aria-controls, roving tabindex.</p>
+            </div>
+
+            <div class="card">
+                <h3>Accordion</h3>
+                <p><strong>Test:</strong> Enter or Space on a heading button. <strong>ARIA:</strong> aria-expanded, aria-controls.</p>
+                <div class="acc">
+                    <button id="ah1" aria-expanded="false" aria-controls="ap1">What is a focus indicator?</button>
+                    <div id="ap1" role="region" aria-labelledby="ah1" hidden>The outline that shows where keyboard focus is (SC 2.4.7).</div>
+                    <button id="ah2" aria-expanded="false" aria-controls="ap2">Why use a real button?</button>
+                    <div id="ap2" role="region" aria-labelledby="ah2" hidden>Buttons get focus, Enter, Space and a role for free (SC 2.1.1, 4.1.2).</div>
+                    <button id="ah3" aria-expanded="false" aria-controls="ap3">When is ARIA the wrong tool?</button>
+                    <div id="ap3" role="region" aria-labelledby="ah3" hidden>When a native element already does the job. No ARIA is better than bad ARIA.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Switch</h3>
+                <p><strong>Test:</strong> Space or Enter toggles. A screen reader says "on" or "off", not "checked". <strong>ARIA:</strong> role=switch, aria-checked.</p>
+                <button type="button" role="switch" aria-checked="false" id="demoSw"><span class="trk" aria-hidden="true"></span>Email alerts: <span id="demoSwTxt">off</span></button>
+            </div>
+
+            <div class="card">
+                <h3>Modal dialog</h3>
+                <p><strong>Test:</strong> Open it, press Tab (focus stays inside), press Esc (focus returns here).
+                    <strong>ARIA:</strong> native dialog with showModal() supplies the modal role, focus trap and Esc; aria-labelledby and aria-describedby name it.</p>
+                <button class="btn" id="openDlg">Open dialog</button>
+                <dialog id="dlg" aria-labelledby="dt" aria-describedby="dd">
+                    <h4 id="dt">Confirm</h4>
+                    <p id="dd">Focus is trapped in this dialog until you close it.</p>
+                    <button class="btn" id="closeDlg">Close</button> <button id="other">Another control</button>
+                </dialog>
+            </div>
+
+            <div class="card">
+                <h3>Menu button</h3>
+                <p><strong>Test:</strong> Enter or Down Arrow opens; Up, Down, Home, End move; Esc closes and returns focus.
+                    <strong>ARIA:</strong> aria-haspopup, aria-expanded, menu, menuitem.</p>
+                <div style="position:relative;display:inline-block">
+                    <button id="menubtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menulist">Actions</button>
+                    <div id="menulist" class="menu" role="menu" aria-labelledby="menubtn" hidden>
+                        <button role="menuitem" tabindex="-1">Copy</button><button role="menuitem" tabindex="-1">Rename</button><button role="menuitem" tabindex="-1">Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Form with validation</h3>
+                <p><strong>Test:</strong> Submit empty. Focus moves to the error summary; each link jumps to its field.
+                    <strong>ARIA:</strong> aria-required, aria-invalid, aria-describedby, role=status.</p>
+                <div id="esum" class="err" tabindex="-1" hidden></div>
+                <form id="frm" novalidate>
+                    <div class="field"><label for="fname">Name (required)</label><input id="fname" type="text" aria-required="true" aria-describedby="fname-err" autocomplete="name">
+                        <div id="fname-err" class="err"></div></div>
+                    <div class="field"><label for="femail">Email (required)</label><input id="femail" type="email" aria-required="true" aria-describedby="femail-err" autocomplete="email">
+                        <div id="femail-err" class="err"></div></div>
+                    <button class="btn" type="submit">Send</button>
+                </form>
+                <div id="status" class="toast" role="status"></div>
+            </div>
+
+            <div class="card tele">
+                <div class="tele-head">
+                    <h3 style="margin:0">Keyboard telemetry</h3>
+                    <span class="live"><i aria-hidden="true"></i>Listening for keys</span>
+                </div>
+                <p class="mut" style="margin:.2rem 0">Every key and the focused element, so you can verify focus order (SC 2.4.3).</p>
+
+                <div class="stats" role="group" aria-label="Key counters">
+                    <div class="stat"><b id="kc-total">0</b><span>total keys</span></div>
+                    <div class="stat"><b id="kc-uniq">0</b><span>unique keys</span></div>
+                    <div class="stat"><b id="kc-tab">0</b><span>Tab presses</span></div>
+                    <div class="stat"><b id="kc-nav">0</b><span>navigation</span></div>
+                    <div class="stat"><b id="kc-act">0</b><span>Enter, Space, Esc</span></div>
+                </div>
+
+                <div class="lastkey">
+                    <div class="big"><span>last key</span><b id="klast">none</b></div>
+                    <div class="big"><span>focused element</span><b id="kel" style="font-size:1.1rem">none</b></div>
+                </div>
+
+                <div class="row" style="margin:.5rem 0" role="group" aria-label="Modifier keys held right now">
+                    <span class="chip" data-mod="shiftKey">Shift: <span>off</span></span>
+                    <span class="chip" data-mod="ctrlKey">Ctrl: <span>off</span></span>
+                    <span class="chip" data-mod="altKey">Alt: <span>off</span></span>
+                    <span class="chip" data-mod="metaKey">Meta: <span>off</span></span>
+                    <button type="button" id="klear" style="margin-left:auto">Clear log</button>
+                </div>
+                <ol id="klog" class="klog" aria-label="Recent key events"></ol>
+            </div>
+        </section>
+
+        <!-- ================= MODULE 2 ================= -->
+        <section role="tabpanel" id="p2" aria-labelledby="t2" tabindex="-1" hidden>
+            <h2>Contrast and magnification tester</h2>
+
+            <div class="card">
+                <h3>RGB and hex color manipulator</h3>
+                <p class="lede" style="margin-bottom:.6rem">Every control is two-way: change a picker, hex box, slider or number and the others follow.</p>
+                <div class="presets" role="group" aria-label="Preset color pairs" id="presets"></div>
+                <div class="cgrid" id="cgrid" style="margin-top:1rem"></div>
+
+                <div class="bigratio"><b><span id="ratio">0.00</span>:1</b><span class="mut">contrast ratio, rounded down, never up</span></div>
+                <div class="meter" aria-hidden="true" id="meter"><i id="meterfill"></i><u style="left:14.29%"><span>3</span></u><u style="left:21.43%"><span>4.5</span></u><u style="left:33.33%"><span>7</span></u></div>
+                <ul id="results" class="res"></ul>
+
+                <div class="pv" id="pv">
+                    <p style="margin:0;font-size:1rem">Normal text sample</p>
+                    <p style="margin:0;font-size:1.5rem">Large text sample (24px)</p>
+                    <p style="margin:0;font-size:1.167rem;font-weight:700">Large bold sample (18.66px bold)</p>
+                    <span class="ui">UI component border</span>
+                </div>
+
+                <fieldset>
+                    <legend>Suggest a passing color</legend>
+                    <div class="row">
+                        <div><label for="sgTarget">Target</label><br>
+                            <select id="sgTarget"><option value="4.5">AA normal text (4.5:1)</option><option value="7">AAA normal text (7:1)</option><option value="3">AA large text or UI (3:1)</option></select></div>
+                        <div><label for="sgWhich">Adjust</label><br>
+                            <select id="sgWhich"><option value="fg">Text color</option><option value="bg">Background color</option></select></div>
+                        <button class="btn" id="sugg" style="align-self:flex-end">Suggest passing color</button>
+                        <button id="swap" style="align-self:flex-end">Swap colors</button>
+                        <button id="undo" style="align-self:flex-end" disabled>Undo</button>
+                    </div>
+                    <p id="sugout" role="status" class="mono" style="margin:.6rem 0 0"></p>
+                    <p class="mut" style="margin:.4rem 0 0">The engine keeps the hue and saturation, then searches lightness in both directions and picks the nearest shade that passes. That preserves color temperature.</p>
+                </fieldset>
+            </div>
+
+            <div class="card">
+                <h3>Magnification, reflow and vision profiles</h3>
+                <div class="row">
+                    <div><label for="ver">Sample</label><br><select id="ver"><option value="g">After (fixed)</option><option value="b">Before (broken)</option></select></div>
+                    <div><label for="zoom">Text size <output id="zo">100%</output></label><br><input type="range" id="zoom" min="100" max="400" step="25" value="100"></div>
+                    <div><label for="cb">Vision profile</label><br><select id="cb">
+                            <option value="">Normal vision</option>
+                            <optgroup label="Color vision deficiency"><option value="pro">Protanopia (cannot see red)</option><option value="deu">Deuteranopia (cannot see green)</option><option value="tri">Tritanopia (cannot see blue)</option><option value="proa">Protanomaly (weak red)</option><option value="deua">Deuteranomaly (weak green)</option><option value="tria">Tritanomaly (weak blue)</option></optgroup>
+                            <optgroup label="Black and white"><option value="ach">Achromatopsia (black, white, grey only)</option><option value="achg">Achromatopsia with glare sensitivity</option></optgroup>
+                            <optgroup label="Low vision"><option value="blur">Blurred vision (low acuity)</option><option value="cat">Cataracts (hazy, washed out)</option><option value="glau">Glaucoma (tunnel vision)</option><option value="mac">Macular degeneration (central blind spot)</option></optgroup>
+                            <optgroup label="No sight"><option value="blind">Blind (screen reader view)</option></optgroup></select></div>
+                    <div id="vpsevwrap" hidden><label for="vpsev">Severity <output id="vpsv">50%</output></label><br><input type="range" id="vpsev" min="0" max="100" step="5" value="50"></div>
+                </div>
+                <div class="row" style="margin-top:.5rem"><label><input type="checkbox" id="rf"> Reflow at 320px (SC 1.4.10)</label><label><input type="checkbox" id="sp"> Text spacing (SC 1.4.12)</label>
+                    <button type="button" id="z200">Jump to 200%</button><button type="button" id="z400">Jump to 400%</button></div>
+                <div id="vpinfo" role="status"></div>
+                <div class="vstat" id="vstat" role="status"></div>
+                <div class="vwrap"><div class="wrap"><div id="stage"></div></div><div id="vpov" aria-hidden="true"></div></div>
+                <div id="srview" class="card" hidden><h3>What a screen reader would announce</h3><p class="mut" style="margin:0">Read top to bottom, the way a blind user hears the page. Warnings mark things that are missing or unclear.</p><ol id="srlist" class="srl"></ol></div>
+                <p class="mut">SC 1.4.4 asks that text resize to 200% without loss of content or function. This is a simulation: also test with browser zoom, the OS magnifier, and a screen reader such as NVDA, JAWS or VoiceOver.</p>
+            </div>
+        </section>
+
+        <!-- ================= MODULE 3 ================= -->
+        <section role="tabpanel" id="p3" aria-labelledby="t3" tabindex="-1" hidden>
+            <h2>WCAG 2.1 remediation workshop</h2>
+            <div class="row" style="margin:.5rem 0 1rem">
+                <label for="zoom3">Text size <output id="zo3">100%</output></label>
+                <input type="range" id="zoom3" min="50" max="400" step="25" value="100">
+                <button type="button" id="zr3">Reset size</button>
+            </div>
+            <fieldset>
+                <legend>View</legend>
+                <label><input type="radio" name="view" value="b" checked> Before</label>
+                <label><input type="radio" name="view" value="a"> After</label>
+                <label><input type="radio" name="view" value="s"> Side by side</label>
+            </fieldset>
+            <div class="row top-al">
+                <div id="wb" class="wrap" style="flex:1 1 20rem"></div>
+                <div id="wa" class="wrap" style="flex:1 1 20rem" hidden></div>
+            </div>
+            <div class="sumbar">
+                <div><span id="prog" role="status"></span><br><progress id="pbar" max="14" value="0" aria-label="Issues found"></progress></div>
+                <div><span id="progf" role="status"></span><br><progress id="pbarf" max="14" value="0" aria-label="Issues fixed"></progress></div>
+            </div>
+            <h3>Issue tracker</h3>
+            <div class="ihead">
+                <label for="lvl">Show</label>
+                <select id="lvl"><option value="">All levels</option><option value="A">Level A</option><option value="AA">Level AA</option></select>
+                <label for="stf">Status</label>
+                <select id="stf"><option value="">Any status</option><option value="open">Not found yet</option><option value="found">Found, not fixed</option><option value="fixed">Fixed</option></select>
+                <button type="button" id="expand">Expand all details</button>
+                <span id="shown" class="mono mut" role="status"></span>
+            </div>
+            <div id="issues" class="igrid"></div>
+        </section>
+
+        <!-- ================= MODULE 4 ================= -->
+        <section role="tabpanel" id="p4" aria-labelledby="t4" tabindex="-1" hidden>
+            <h2>Audit report and checklist</h2>
+            <div class="card">
+                <h3>How to test</h3>
+                <p>Keyboard only: Tab, Shift+Tab, Enter, Space, arrows, Esc. Screen readers: NVDA with Firefox or Chrome, VoiceOver with Safari, TalkBack on Android. Also check zoom to 200%, contrast tools, and automated scanners (axe DevTools, Lighthouse, WAVE). Automated tools find only a portion of WCAG issues, so manual testing is required.</p>
+            </div>
+            <div class="row noprint" style="margin-bottom:.5rem">
+                <button type="button" id="allpass">Mark all pass</button>
+                <button type="button" id="clrchk">Clear all ratings</button>
+                <span id="chsum" class="mono mut" role="status"></span>
+            </div>
+            <div id="chk"></div>
+
+            <h3>Report</h3>
+            <div class="row noprint">
+                <button class="btn" id="gen">Generate report</button>
+                <button id="cpy">Copy report as text</button>
+                <button id="prt">Print or save as PDF</button>
+            </div>
+            <div id="rep" class="rp" tabindex="-1" style="margin-top:.8rem"><p class="mut" style="margin:0">Choose Generate report to build a summary from the checklist, the issue tracker and your last contrast check.</p></div>
+            <p id="cpst" role="status"></p>
+        </section>
+    </main>
+
+    <footer>
+        <p class="mut">Limits: this app cannot replace testing with real assistive technology, and its scanners check only what they can compute.</p>
+    </footer>
+
+    <div id="printOut" class="rp" aria-hidden="true"></div>
+
+    <!-- SVG color vision filters -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <filter id="vp" color-interpolation-filters="sRGB"><feColorMatrix id="vpm" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" /></filter>
+            <filter id="pro"><feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0" /></filter>
+            <filter id="deu"><feColorMatrix type="matrix" values="0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0" /></filter>
+            <filter id="tri"><feColorMatrix type="matrix" values="0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0" /></filter>
+            <filter id="ach"><feColorMatrix type="matrix" values="0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0 0 0 1 0" /></filter>
+        </defs>
+    </svg>
+
+    <script>
+        const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+        const TE = (h) => String(h).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } } };
+        const root = document.documentElement;
+        function say(m) { const s = $('#announce'); s.textContent = ''; setTimeout(() => s.textContent = m, 60); }
+
+        /* ---------- Display options: theme, accent, motion (remembered per viewer) ---------- */
+        const ts = $('#theme'), ac = $('#accent'), msw = $('#motionSw');
+        ts.value = store.get('a11y-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        ac.value = store.get('a11y-accent') || 'signal';
+        function setLook() { root.dataset.theme = ts.value; root.dataset.accent = ac.value; store.set('a11y-theme', ts.value); store.set('a11y-accent', ac.value); }
+        ts.onchange = ac.onchange = setLook; setLook();
+        function setMotion(on) { msw.setAttribute('aria-checked', String(on)); if (on) root.dataset.motion = 'reduce'; else delete root.dataset.motion; }
+        setMotion(matchMedia('(prefers-reduced-motion: reduce)').matches);
+        msw.onclick = () => setMotion(msw.getAttribute('aria-checked') !== 'true');
+
+        /* ---------- Tabs: roving tabindex; Enter/Space also moves focus into the panel ---------- */
+        const tabs = $$('[role=tab]');
+        const tind = $('#tabInd');
+        function moveInd() { const t = tabs.find(x => x.getAttribute('aria-selected') === 'true'); if (!t || !tind) return; tind.style.width = t.offsetWidth + 'px'; tind.style.height = t.offsetHeight + 'px'; tind.style.transform = 'translate(' + t.offsetLeft + 'px,' + t.offsetTop + 'px)'; }
+        const FOC = 'button:not([disabled]),a[href],input:not([disabled]),select,textarea,summary,[tabindex="0"]';
+        function firstFocusable(p) { return $$(FOC, p).find(el => el.getClientRects().length && !el.closest('[hidden]')); }
+        function selTab(t, focusIn) {
+            tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; $('#' + x.getAttribute('aria-controls')).hidden = !on; }); moveInd();
+            if (focusIn) { const p = $('#' + t.getAttribute('aria-controls')); (firstFocusable(p) || p).focus(); }
+        }
+        tabs.forEach(t => t.onclick = () => selTab(t, false));
+        const tl = $('#maintabs');
+        tl.addEventListener('keydown', e => {
+            const i = tabs.indexOf(document.activeElement); if (i < 0) return; let n = -1;
+            if (e.key === 'Enter') { e.preventDefault(); selTab(tabs[i], true); return; }
+            if (e.key === ' ') { e.preventDefault(); return; }            /* act on keyup so the key release cannot click the new control */
+            if (e.key === 'ArrowRight') n = (i + 1) % tabs.length; else if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length; else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = tabs.length - 1;
+            if (n > -1) { e.preventDefault(); tabs[n].focus(); selTab(tabs[n], false); }
+        });
+        tl.addEventListener('keyup', e => { if (e.key === ' ') { const i = tabs.indexOf(document.activeElement); if (i > -1) { e.preventDefault(); selTab(tabs[i], true); } } });
+
+        /* ---------- Accordion, switch, dialog, menu ---------- */
+        $$('.acc button').forEach(b => b.onclick = () => { const o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', String(!o)); $('#' + b.getAttribute('aria-controls')).hidden = o; });
+        const dsw = $('#demoSw'); dsw.onclick = () => { const on = dsw.getAttribute('aria-checked') !== 'true'; dsw.setAttribute('aria-checked', String(on)); $('#demoSwTxt').textContent = on ? 'on' : 'off'; };
+        const dlg = $('#dlg'), op = $('#openDlg'); op.onclick = () => dlg.showModal(); $('#closeDlg').onclick = () => dlg.close(); dlg.addEventListener('close', () => op.focus());
+        const mb = $('#menubtn'), ml = $('#menulist'), mi = $$('[role=menuitem]', ml);
+        function openM(i) { ml.hidden = false; mb.setAttribute('aria-expanded', 'true'); mi[i].focus(); }
+        function closeM(f) { ml.hidden = true; mb.setAttribute('aria-expanded', 'false'); if (f) mb.focus(); }
+        mb.onclick = () => ml.hidden ? openM(0) : closeM(true);
+        mb.onkeydown = e => { if (e.key === 'ArrowDown') { e.preventDefault(); openM(0); } else if (e.key === 'ArrowUp') { e.preventDefault(); openM(mi.length - 1); } };
+        ml.onkeydown = e => {
+            const i = mi.indexOf(document.activeElement); let n = -1;
+            if (e.key === 'ArrowDown') n = (i + 1) % mi.length; else if (e.key === 'ArrowUp') n = (i - 1 + mi.length) % mi.length; else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = mi.length - 1;
+            else if (e.key === 'Escape') { closeM(true); return; } else if (e.key === 'Tab') { closeM(false); return; }
+            if (n > -1) { e.preventDefault(); mi[n].focus(); }
+        };
+        mi.forEach(m => m.onclick = () => { closeM(true); say('Chose: ' + m.textContent); $('#status').textContent = 'Chose: ' + m.textContent; });
+
+        /* ---------- Form ---------- */
+        $('#frm').onsubmit = e => {
+            e.preventDefault(); const errs = [];
+            [['fname', 'Enter your name.'], ['femail', 'Enter an email address like name@example.com.']].forEach(([id, m]) => {
+                const f = $('#' + id), er = $('#' + id + '-err'), ok = f.value.trim() && (id !== 'femail' || /^\S+@\S+\.\S+$/.test(f.value));
+                f.setAttribute('aria-invalid', String(!ok)); er.textContent = ok ? '' : 'Error: ' + m; if (!ok) errs.push([id, m]);
+            });
+            const sum = $('#esum');
+            if (errs.length) { sum.innerHTML = '<h4>' + errs.length + (errs.length > 1 ? ' problems' : ' problem') + ' to fix</h4><ul>' + errs.map(([id, m]) => '<li><a href="#' + id + '">' + TE(m) + '</a></li>').join('') + '</ul>'; sum.hidden = false; sum.focus(); }
+            else { sum.hidden = true; $('#status').textContent = 'Form sent.'; say('Form sent.'); }
+        };
+        $('#esum').onclick = e => { if (e.target.tagName === 'A') { e.preventDefault(); $(e.target.getAttribute('href')).focus(); } };
+
+        /* ---------- Keyboard telemetry (also hosts the deliberate trap used by the Before sample) ---------- */
+        const klog = $('#klog'); let T, seen;
+        function resetT() { T = { total: 0, tab: 0, nav: 0, act: 0 }; seen = new Set(); }
+        resetT();
+        const emptyLi = '<li class="t">No keys captured yet. Press any key.</li>';
+        klog.innerHTML = emptyLi;
+        function nm(el) { return (el.getAttribute && el.getAttribute('aria-label')) || (el.labels && el.labels[0] && el.labels[0].textContent.trim()) || (el.textContent || '').trim().slice(0, 28); }
+        function kind(k) {
+            if (['Shift', 'Control', 'Alt', 'Meta'].includes(k)) return 'modifier';
+            if (k.startsWith('Arrow') || ['Home', 'End', 'PageUp', 'PageDown', 'Tab'].includes(k)) return 'navigation';
+            if (['Enter', ' ', 'Escape'].includes(k)) return 'action';
+            return 'text';
+        }
+        function counters() { $('#kc-total').textContent = T.total; $('#kc-uniq').textContent = seen.size; $('#kc-tab').textContent = T.tab; $('#kc-nav').textContent = T.nav; $('#kc-act').textContent = T.act; }
+        function mods(e) { $$('[data-mod]').forEach(c => { const on = !!e[c.dataset.mod]; c.classList.toggle('on', on); $('span', c).textContent = on ? 'on' : 'off'; }); }
+        document.addEventListener('keydown', e => {
+            const el = document.activeElement, k = e.key === ' ' ? 'Space' : e.key, kd = kind(e.key);
+            T.total++; seen.add(k); if (e.key === 'Tab') T.tab++; if (kd === 'navigation') T.nav++; if (kd === 'action') T.act++;
+            counters(); mods(e);
+            const desc = '<' + el.tagName.toLowerCase() + '>' + (el.getAttribute('role') ? ' role=' + el.getAttribute('role') : '') + ' "' + nm(el) + '"';
+            $('#klast').textContent = k; $('#kel').textContent = desc;
+            if (klog.firstElementChild && klog.firstElementChild.classList.contains('t') && !klog.firstElementChild.querySelector('.k')) klog.innerHTML = '';
+            const li = document.createElement('li'), now = new Date();
+            li.innerHTML = '<span class="t">' + now.toLocaleTimeString('en-GB') + '.' + String(now.getMilliseconds()).padStart(3, '0') + '</span><span class="k">' + TE(k) + '</span><span class="chip">' + kd + '</span><span>' + TE(desc) + '</span>';
+            klog.prepend(li); while (klog.children.length > 12) klog.lastChild.remove();
+            if (el.classList && el.classList.contains('trap')) { if (e.key === 'Tab') e.preventDefault(); if (e.key === 'Escape') el.blur(); }
+        });
+        document.addEventListener('keyup', mods);
+        $('#klear').onclick = () => { resetT(); counters(); klog.innerHTML = emptyLi; $('#klast').textContent = 'none'; $('#kel').textContent = 'none'; say('Key log cleared.'); };
+
+        /* ---------- Module 2: contrast math exactly as WCAG 2.x defines it ---------- */
+        function norm(h) { h = h.trim(); if (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(h)) h = '#' + h; if (/^#[0-9a-f]{3}$/i.test(h)) h = '#' + [...h.slice(1)].map(c => c + c).join(''); return /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null; }
+        function rgb(h) { return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); }
+        function toHex(r, g, b) { return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join(''); }
+        function lum(h) { const c = rgb(h).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
+        function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+        function hsl(h) { let [r, g, b] = rgb(h).map(v => v / 255); const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; let H = 0, S = 0; if (d) { S = d / (1 - Math.abs(2 * l - 1)); H = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; H *= 60; if (H < 0) H += 360; } return [H, S, l]; }
+        function fromHsl(H, S, L) { const c = (1 - Math.abs(2 * L - 1)) * S, x = c * (1 - Math.abs((H / 60) % 2 - 1)), m = L - c / 2; let r = 0, g = 0, b = 0; if (H < 60) [r, g, b] = [c, x, 0]; else if (H < 120) [r, g, b] = [x, c, 0]; else if (H < 180) [r, g, b] = [0, c, x]; else if (H < 240) [r, g, b] = [0, x, c]; else if (H < 300) [r, g, b] = [x, 0, c]; else [r, g, b] = [c, 0, x]; return toHex((r + m) * 255, (g + m) * 255, (b + m) * 255); }
+
+        /* Nearest passing shade: keep hue and saturation (color temperature), search lightness outward both ways */
+        function suggestColor(base, other, t, isFg) {
+            const calc = c => isFg ? ratio(c, other) : ratio(other, c);
+            if (calc(base) >= t) return { hex: base, same: true };
+            const [H, S, L] = hsl(base), up = lum(other) > lum(base) ? [-1, 1] : [1, -1];
+            for (let d = 0.002; d <= 1; d += 0.002) for (const s of up) { const l2 = L + s * d; if (l2 < 0 || l2 > 1) continue; const c = fromHsl(H, S, l2); if (calc(c) >= t) return { hex: c }; }
+            return { hex: calc('#ffffff') >= calc('#000000') ? '#ffffff' : '#000000', fallback: true };
+        }
+
+        const C = { fg: '#6f7aa8', bg: '#101730' };
+        const LABEL = { fg: 'Text color', bg: 'Background color' };
+        $('#cgrid').innerHTML = ['fg', 'bg'].map(id => `<fieldset><legend>${LABEL[id]}</legend>
+            <div class="row"><input type="color" id="${id}c" aria-label="${LABEL[id]} picker">
+            <div><label for="${id}h" class="sr">${LABEL[id]} hex</label><input type="text" class="hex" id="${id}h" maxlength="7" spellcheck="false" autocomplete="off" aria-describedby="${id}herr"></div>
+            <span id="${id}herr" class="err mono" role="status"></span></div>
+            ${['r', 'g', 'b'].map((ch, i) => `<div class="ch-row"><label for="${id}${ch}">${ch.toUpperCase()}<span class="sr"> ${['red', 'green', 'blue'][i]} 0 to 255</span></label>
+              <input type="range" class="ch" id="${id}${ch}" min="0" max="255" step="1"><input type="number" class="num" id="${id}${ch}n" min="0" max="255" aria-label="${LABEL[id]} ${['red', 'green', 'blue'][i]} value"></div>`).join('')}
+            </fieldset>`).join('');
+        function setColor(id, hex, src) {
+            C[id] = hex; const [r, g, b] = rgb(hex);
+            if (src !== 'pick') $('#' + id + 'c').value = hex;
+            if (src !== 'hex') { $('#' + id + 'h').value = hex; $('#' + id + 'h').removeAttribute('aria-invalid'); $('#' + id + 'herr').textContent = ''; }
+            [['r', r], ['g', g], ['b', b]].forEach(([ch, v]) => { if (src !== 'rgb') $('#' + id + ch).value = v; if (src !== 'num') $('#' + id + ch + 'n').value = v; });
+            $('#' + id + 'r').style.setProperty('--trk', `linear-gradient(90deg, rgb(0,${g},${b}), rgb(255,${g},${b}))`);
+            $('#' + id + 'g').style.setProperty('--trk', `linear-gradient(90deg, rgb(${r},0,${b}), rgb(${r},255,${b}))`);
+            $('#' + id + 'b').style.setProperty('--trk', `linear-gradient(90deg, rgb(${r},${g},0), rgb(${r},${g},255))`);
+            upd();
+        }
+        ['fg', 'bg'].forEach(id => {
+            $('#' + id + 'c').oninput = e => setColor(id, e.target.value, 'pick');
+            $('#' + id + 'h').oninput = e => { const n = norm(e.target.value); if (n) setColor(id, n, 'hex'); else { e.target.setAttribute('aria-invalid', 'true'); $('#' + id + 'herr').textContent = 'Use 3 or 6 hex digits.'; } };
+            $('#' + id + 'h').onblur = e => { if (norm(e.target.value)) setColor(id, norm(e.target.value)); };
+            $$('input.ch', $('#cgrid')).filter(x => x.id.startsWith(id)).forEach(sl => sl.oninput = () => setColor(id, toHex(+$('#' + id + 'r').value, +$('#' + id + 'g').value, +$('#' + id + 'b').value), 'rgb'));
+            ['r', 'g', 'b'].forEach(ch => $('#' + id + ch + 'n').oninput = () => { const vals = ['r', 'g', 'b'].map(c => Math.max(0, Math.min(255, parseInt($('#' + id + c + 'n').value, 10) || 0))); setColor(id, toHex(...vals), 'num'); });
+        });
+        const TESTS = [['Normal text AA', 4.5], ['Large text AA', 3], ['UI component or graphic AA (SC 1.4.11)', 3], ['Normal text AAA', 7], ['Large text AAA', 4.5]];
+        function upd() {
+            const f = C.fg, b = C.bg, r = ratio(f, b);
+            $('#ratio').textContent = (Math.floor(r * 100) / 100).toFixed(2);
+            $('#meterfill').style.width = Math.min(100, r / 21 * 100) + '%';
+            $('#results').innerHTML = TESTS.map(([n, t]) => { const ok = r >= t; return '<li><span class="pf" style="color:var(--' + (ok ? 'ok' : 'bad') + ')">' + (ok ? '\u2714 Pass' : '\u2716 Fail') + '</span> ' + n + ' (needs ' + t + ':1)</li>'; }).join('');
+            $('#pv').style.cssText = 'color:' + f + ';background:' + b;
+        }
+        const PRE = [['Weak gray on white', '#767676', '#ffffff'], ['Fails: dim on card', '#6f7aa8', '#101730'], ['Brand amber on ink', '#ffd23f', '#080b16'], ['Red on green', '#c0392b', '#27ae60'], ['Light on light', '#9ad0f5', '#ffffff']];
+        $('#presets').innerHTML = PRE.map((p, i) => `<button type="button" data-p="${i}"><i style="color:${p[1]};background:${p[2]}" aria-hidden="true">Aa</i>${TE(p[0])}</button>`).join('');
+        $('#presets').onclick = e => { const b = e.target.closest('button'); if (!b) return; const p = PRE[b.dataset.p]; setColor('fg', p[1]); setColor('bg', p[2]); say('Preset loaded: ' + p[0]); };
+        let prev = null;
+        $('#sugg').onclick = () => {
+            const which = $('#sgWhich').value, t = +$('#sgTarget').value, isFg = which === 'fg', base = C[which], other = C[isFg ? 'bg' : 'fg'], out = $('#sugout');
+            const before = ratio(C.fg, C.bg), s = suggestColor(base, other, t, isFg);
+            if (s.same) { out.textContent = 'Already passes ' + t + ':1 at ' + (Math.floor(before * 100) / 100).toFixed(2) + ':1. No change needed.'; return; }
+            prev = { which, hex: base }; $('#undo').disabled = false; setColor(which, s.hex);
+            const after = ratio(C.fg, C.bg);
+            out.textContent = (isFg ? 'Text' : 'Background') + ' changed ' + base + ' to ' + s.hex + '. Ratio ' + (Math.floor(before * 100) / 100).toFixed(2) + ' to ' + (Math.floor(after * 100) / 100).toFixed(2) + ':1' + (s.fallback ? ' (hue could not be kept: fell back to black or white).' : ', hue and saturation kept.');
+        };
+        $('#undo').onclick = () => { if (!prev) return; setColor(prev.which, prev.hex); prev = null; $('#undo').disabled = true; $('#sugout').textContent = 'Restored the previous color.'; };
+        $('#swap').onclick = () => { const f = C.fg, b = C.bg; setColor('fg', b); setColor('bg', f); $('#sugout').textContent = 'Text and background swapped.'; };
+        setColor('fg', C.fg); setColor('bg', C.bg);
+
+        /* ---------- Sample UI: Before has 14 failures, After fixes each ---------- */
+        const IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='%23c8a27a'/%3E%3C/svg%3E";
+        function sample(g, p) {
+            const add = "document.getElementById('" + p + "st').textContent='Added to cart'";
+            if (g) return '<div class="sm good"><header style="padding:0;display:flex;justify-content:space-between;align-items:center"><h2>Brew &amp; Bean</h2><button type="button" aria-label="Search">\uD83D\uDD0D</button></header>'
+                + '<h3>Our beans</h3><img src="' + IMG + '" alt="Bag of medium-roast Ethiopian beans" width="80" height="60">'
+                + '<p>Small-batch coffee, roasted weekly. <a href="#" onclick="return false">Read our roasting guide</a></p>'
+                + '<button type="button" onclick="' + add + '">Add to cart</button> <span id="' + p + 'st" role="status"></span>'
+                + '<form onsubmit="return false"><label for="' + p + 'e">Email</label><input id="' + p + 'e" type="email" aria-invalid="true" aria-describedby="' + p + 'ee" value="bob@"><span id="' + p + 'ee" class="er">\u26A0 Error: enter a full email address.</span></form>'
+                + '<label for="' + p + 'bag">Bag size</label><select id="' + p + 'bag" class="bagsel"><option value="250 g|9">250 g</option><option value="500 g|16">500 g</option><option value="1 kg|29">1 kg</option></select>'
+                + '<table><caption>Prices</caption><thead><tr><th scope="col">Bag</th><th scope="col">Price</th></tr></thead><tbody><tr><td class="bsz">250 g</td><td class="bpr">$9</td></tr></tbody></table></div>';
+            return '<div class="sm bad"><div class="hd"><h2>Brew &amp; Bean</h2><button type="button">\uD83D\uDD0D</button></div>'
+                + '<h5>Our beans</h5><img src="' + IMG + '">'
+                + '<p class="lc">Small-batch coffee, roasted weekly. To learn more <a href="#" onclick="return false" tabindex="5">click here</a></p>'
+                + '<div class="clk" onclick="' + add + '">Add to cart</div><span id="' + p + 'st"></span>'
+                + '<form onsubmit="return false"><input class="redb" placeholder="Email" value="bob@"><br><br><input class="trap" value="Tab is trapped here. Press Esc to leave."></form>'
+                + '<div style="margin:6px 0">Bag size <select class="bagsel"><option value="250 g|9">250 g</option><option value="500 g|16">500 g</option><option value="1 kg|29">1 kg</option></select></div>'
+                + '<table><tr><td>Bag</td><td>Price</td></tr><tr><td class="bsz">250 g</td><td class="bpr">$9</td></tr></table></div>';
+        }
+
+        const stage = $('#stage');
+        function renderStage() { stage.innerHTML = sample($('#ver').value === 'g', $('#ver').value === 'g' ? 'mg' : 'mb'); applyStage(); }
+        function applyStage() {
+            const z = +$('#zoom').value; $('#zo').textContent = z + '%'; stage.style.fontSize = (16 * z / 100) + 'px';
+            const rf = $('#rf').checked, sp = $('#sp').checked;
+            stage.style.width = rf ? '320px' : ''; stage.classList.toggle('sp', sp); applyVision();
+            const sr = stage.getBoundingClientRect(), wide = stage.scrollWidth > stage.clientWidth + 1;
+            const out = $$('*', stage).filter(el => el.getBoundingClientRect().right > sr.right + 1).length;
+            const row = (sc, ok, txt) => '<div><b>' + (ok === null ? '\u25CB' : ok ? '\u2714' : '\u2716') + ' SC ' + sc + '</b><br>' + txt + '</div>';
+            $('#vstat').innerHTML =
+                row('1.4.4 Resize text', z >= 200 ? !(wide || out) : null, z >= 200 ? ((wide || out) ? 'Content is clipped or scrolls sideways at ' + z + '%.' : 'No loss of content at ' + z + '%.') : 'Raise the text size to 200% or more to test.')
+                + row('1.4.10 Reflow', rf ? !wide : null, rf ? (wide ? 'Horizontal scroll at 320px. Fails.' : 'No horizontal scroll at 320px.') : 'Turn on 320px reflow to test.')
+                + row('1.4.12 Text spacing', sp ? !out : null, sp ? (out ? out + ' element(s) overflow with spacing applied (line height 1.5, letter 0.12em, word 0.16em).' : 'Nothing overflows with the required spacing applied.') : 'Turn on text spacing to test.');
+        }
+        ['ver', 'zoom', 'rf', 'sp', 'cb'].forEach(id => $('#' + id).addEventListener(id === 'zoom' ? 'input' : 'change', id === 'ver' ? renderStage : applyStage));
+        /* ---------- Vision profiles: color deficiencies, low vision and no sight ---------- */
+        const MX = { pro: [.567, .433, 0, .558, .442, 0, 0, .242, .758], deu: [.625, .375, 0, .7, .3, 0, 0, .3, .7], tri: [.95, .05, 0, 0, .433, .567, 0, .475, .525], ach: [.299, .587, .114, .299, .587, .114, .299, .587, .114] };
+        const mix3 = (B, s) => { const I = [1, 0, 0, 0, 1, 0, 0, 0, 1], m = B.map((v, i) => I[i] * (1 - s) + v * s); return [0, 3, 6].map(r => m[r] + ' ' + m[r + 1] + ' ' + m[r + 2] + ' 0 0').join(' ') + ' 0 0 0 1 0'; };
+        const PROF = {
+            '': { n: 'Normal vision', d: 'No simulation. For context, roughly 1 in 12 men and 1 in 200 women have some red-green color vision deficiency.', t: 'use this as the baseline, then compare each profile against it.' },
+            pro: { n: 'Protanopia (cannot see red)', m: 'pro', d: 'Red cones are missing. Reds look dark and muddy, and red, orange and green are easy to confuse.', t: 'red error text, red or green status dots, charts and links that rely on red versus green.' },
+            deu: { n: 'Deuteranopia (cannot see green)', m: 'deu', d: 'Green cones are missing. Greens and reds look alike and both turn a brownish yellow.', t: 'traffic-light status, red and green buttons, and validation that uses only color.' },
+            tri: { n: 'Tritanopia (cannot see blue)', m: 'tri', d: 'Blue cones are missing. Blue looks greenish and yellow looks pale or pinkish.', t: 'blue links on green or yellow, and blue and yellow chart series.' },
+            proa: { n: 'Protanomaly (weak red)', m: 'pro', sev: 50, d: 'Red cones work but respond weakly, so reds look dimmer and less saturated. Use the severity slider.', t: 'red text on dark backgrounds and subtle red-versus-green differences.' },
+            deua: { n: 'Deuteranomaly (weak green)', m: 'deu', sev: 50, d: 'The most common type. Greens shift toward red and small green-red differences vanish. Use the severity slider.', t: 'green and orange or red pairs, and thin colored lines in charts.' },
+            tria: { n: 'Tritanomaly (weak blue)', m: 'tri', sev: 50, d: 'Blue cones respond weakly, so blue and green blur together and yellow looks pale. Use the severity slider.', t: 'blue and green pairs and pale yellow highlights.' },
+            ach: { n: 'Achromatopsia (black, white and grey only)', m: 'ach', d: 'No color perception at all. Everything is a shade of grey, so only differences in lightness remain.', t: 'every state that depends on hue: errors, selected items, chart legends. Contrast and text must carry the meaning.' },
+            achg: { n: 'Achromatopsia with glare sensitivity', m: 'ach', css: () => 'brightness(1.3) contrast(.85)', d: 'Greyscale plus washed-out brightness, because bright light is uncomfortable and detail fades.', t: 'light themes, large white areas and thin low-contrast lines.' },
+            blur: { n: 'Blurred vision (low acuity)', sev: 50, css: s => 'blur(' + (s * 6).toFixed(1) + 'px)', d: 'Fine detail is soft, as with uncorrected focus problems. Raise the severity to blur more.', t: 'whether small text, icons and thin borders are still recognizable. Also try zooming.' },
+            cat: { n: 'Cataracts (hazy, washed out)', sev: 50, css: s => 'blur(' + (s * 1.5).toFixed(1) + 'px) contrast(' + (1 - s * .5).toFixed(2) + ') sepia(' + (s * .35).toFixed(2) + ') brightness(' + (1 + s * .15).toFixed(2) + ')', d: 'Vision looks cloudy and low in contrast, and colors turn yellowish.', t: 'low-contrast text and pale-on-pale controls. Aim well above the 4.5:1 minimum.' },
+            glau: { n: 'Glaucoma (tunnel vision)', sev: 60, ov: s => { const r = 70 - s * 60; return 'radial-gradient(circle at 50% 50%, transparent ' + r + '%, rgba(0,0,0,.97) ' + (r + 10) + '%)'; }, d: 'Side vision is lost, so only a small circle in the centre is visible. Raise the severity to narrow it.', t: 'whether related controls and messages sit close together, since people see only a small area at a time.' },
+            mac: { n: 'Macular degeneration (central blind spot)', sev: 60, ov: s => { const r = s * 18; return 'radial-gradient(circle at 50% 50%, rgba(70,70,70,.96) ' + r + '%, rgba(70,70,70,0) ' + (r + 8) + '%)'; }, d: 'The centre of vision is blocked while the edges stay clear. Reading is hard because the spot covers whatever is looked at.', t: 'whether key content survives zoom and reflow, and whether text can be enlarged and moved with screen magnifiers.' },
+            blind: { n: 'Blind (no sight)', blind: true, d: 'The screen is not seen at all. The page is heard through a screen reader or felt on a braille display, so structure, names and labels matter most.', t: 'every image, button and field announces a useful name, and headings give a map of the page.' }
+        };
+        let vpLast = null;
+        function srLines() {
+            const L = [], nameOf = el => (el.getAttribute('aria-label') || (el.labels && el.labels[0] && el.labels[0].textContent.trim()) || '').trim();
+            $$('h1,h2,h3,h4,h5,h6,p,a,button,img,input,select,.clk,table', stage).forEach(el => {
+                const t = el.tagName.toLowerCase(), tx = el.textContent.trim();
+                if (/^h[1-6]$/.test(t)) L.push([0, 'Heading level ' + t[1] + ': ' + tx]);
+                else if (t === 'p') L.push([0, 'Text: ' + tx]);
+                else if (t === 'a') { const v = /click here/i.test(tx); L.push([v ? 1 : 0, 'Link: ' + tx + (v ? ' (purpose unclear out of context)' : '')]); }
+                else if (t === 'button') { const n = el.getAttribute('aria-label') || tx; L.push(/[A-Za-z0-9]/.test(n) ? [0, 'Button: ' + n] : [1, 'Button with no accessible name (heard as just "button")']); }
+                else if (t === 'img') { if (!el.hasAttribute('alt')) L.push([1, 'Image with no alt text (the file name may be read)']); else if (el.alt) L.push([0, 'Image: ' + el.alt]); }
+                else if (t === 'input') { const n = nameOf(el), d = el.getAttribute('aria-describedby'), de = d && stage.querySelector('#' + d); L.push(n ? [0, 'Edit text: ' + n + (el.getAttribute('aria-invalid') === 'true' ? ', invalid entry' : '') + (de ? '. ' + de.textContent.trim() : '')] : [1, 'Edit text with no label' + (el.placeholder ? ' (placeholder "' + el.placeholder + '" may not be read)' : '')]); }
+                else if (t === 'select') { const n = nameOf(el); L.push(n ? [0, 'Pop-up menu: ' + n + ', ' + el.value.split('|')[0]] : [1, 'Pop-up menu with no label']); }
+                else if (t === 'table') { const cap = el.querySelector('caption'), th = el.querySelector('th'); L.push([th ? 0 : 1, (cap ? 'Table: ' + cap.textContent.trim() : 'Table') + (th ? ' with column headers' : ' without header cells, so cells are read with no column names')]); }
+                else if (el.classList.contains('clk')) L.push([1, 'Plain text "' + tx + '": not announced as a button and cannot be reached with Tab']);
+            });
+            return L;
+        }
+        function applyVision() {
+            const key = $('#cb').value, P = PROF[key] || PROF[''];
+            if (key !== vpLast) { vpLast = key; if (P.sev != null) $('#vpsev').value = P.sev; }
+            $('#vpsevwrap').hidden = P.sev == null;
+            const s = (+$('#vpsev').value) / 100; $('#vpsv').textContent = Math.round(s * 100) + '%';
+            const f = []; if (P.m) { $('#vpm').setAttribute('values', mix3(MX[P.m], P.sev != null ? s : 1)); f.push('url(#vp)'); }
+            if (P.css) f.push(P.css(s));
+            stage.style.filter = ''; void stage.offsetWidth; stage.style.filter = f.join(' ');
+            const o = $('#vpov'), ov = P.ov ? P.ov(s) : '';
+            o.style.display = (ov || P.blind) ? 'flex' : 'none'; o.style.background = P.blind ? '#000' : ov;
+            o.textContent = P.blind ? 'No sight: the screen is black. Use the screen reader view below.' : '';
+            $('#srview').hidden = !P.blind; if (P.blind) $('#srlist').innerHTML = srLines().map(([w, x]) => '<li class="' + (w ? 'warn' : '') + '">' + (w ? '\u26A0 ' : '') + TE(x) + '</li>').join('');
+            $('#vpinfo').innerHTML = '<b>' + TE(P.n) + '</b><br>' + TE(P.d) + '<br><span class="mut">Check: ' + TE(P.t) + '</span>';
+        }
+        $('#vpsev').addEventListener('input', applyStage);
+        $('#z200').onclick = () => { $('#zoom').value = 200; applyStage(); };
+        $('#z400').onclick = () => { $('#zoom').value = 400; $('#rf').checked = true; applyStage(); };
+        renderStage();
+
+        /* ---------- Module 3: issue tracker ---------- */
+        const IS = [
+            ['Low-contrast text', '1.4.3', 'Contrast (Minimum)', 'AA', 'People with low vision, or anyone in bright light', 'Contrast checker: #aaa on white is about 2.3:1.', 'Use at least 4.5:1 for normal text.', '<p style="color:#aaa">', '<p style="color:#444">'],
+            ['Image without alt text', '1.1.1', 'Non-text Content', 'A', 'Screen reader users', 'Inspect the img: no alt, so the file name may be read.', 'Describe meaningful images; use alt="" for decorative ones.', '<img src="beans.png">', '<img src="beans.png" alt="Bag of Ethiopian beans">'],
+            ['Clickable div', '2.1.1', 'Keyboard', 'A', 'Keyboard, switch and screen reader users', 'Press Tab: the div never gets focus.', 'Use a native button.', '<div onclick="add()">Add</div>', '<button type="button" onclick="add()">Add</button>'],
+            ['Placeholder-only field', '3.3.2', 'Labels or Instructions', 'A', 'Screen reader and cognitive-disability users', 'Type in the field: the hint disappears and there is no label.', 'Add a visible label tied with for and id.', '<input placeholder="Email">', '<label for="e">Email</label><input id="e">'],
+            ['Error shown by color only', '1.4.1', 'Use of Color', 'A', 'Color-blind and low-vision users', 'Apply the achromatopsia filter: the red border is the only cue.', 'Add text and an icon, and link it with aria-describedby.', '<input class="redb">', '<input aria-invalid="true" aria-describedby="m"><span id="m">Error: ...</span>'],
+            ['No visible focus indicator', '2.4.7', 'Focus Visible', 'AA', 'Keyboard users', 'Tab through: you cannot see where focus is.', 'Remove outline:none or provide a clear replacement.', '*:focus{outline:none}', ':focus-visible{outline:3px solid #0a4fa3}'],
+            ['Positive tabindex', '2.4.3', 'Focus Order', 'A', 'Keyboard and screen reader users', 'Tab: the link with tabindex=5 is reached out of order.', 'Use tabindex 0 or -1 only and follow the DOM order.', '<a tabindex="5">', '<a href="#">'],
+            ['Skipped heading level', '1.3.1', 'Info and Relationships', 'A', 'Screen reader users who navigate by headings', 'Headings list jumps from h2 to h5. (Strictly a best practice unless the structure is misrepresented.)', 'Use heading levels that reflect the outline.', '<h2>..</h2><h5>..</h5>', '<h2>..</h2><h3>..</h3>'],
+            ['Vague link text', '2.4.4', 'Link Purpose (In Context)', 'A', 'Screen reader users who list links', 'Links list shows "click here".', 'Make the link text describe its destination.', '<a>click here</a>', '<a>Read our roasting guide</a>'],
+            ['Icon-only button without a name', '4.1.2', 'Name, Role, Value', 'A', 'Screen reader and voice control users', 'Accessibility tree shows an empty name.', 'Add aria-label or visible text.', '<button>\uD83D\uDD0D</button>', '<button aria-label="Search">\uD83D\uDD0D</button>'],
+            ['Table without headers', '1.3.1', 'Info and Relationships', 'A', 'Screen reader users', 'Cells are read with no column context.', 'Use th with scope, plus a caption.', '<td>Bag</td>', '<th scope="col">Bag</th>'],
+            ['Fixed pixel width', '1.4.10', 'Reflow', 'AA', 'Low-vision users who zoom', 'Set 320px in Module 2: horizontal scroll appears.', 'Use max-width and relative units.', 'width:600px', 'max-width:100%'],
+            ['Status not announced', '4.1.3', 'Status Messages', 'AA', 'Screen reader users', 'Press Add to cart: nothing is spoken.', 'Put the message in a role="status" region.', '<span id="st"></span>', '<span id="st" role="status"></span>'],
+            ['Keyboard trap', '2.1.2', 'No Keyboard Trap', 'A', 'Keyboard users', 'Focus the last field and press Tab: focus never leaves. (Esc is the escape hatch here.)', 'Never intercept Tab without an exit.', 'onkeydown: Tab -> preventDefault', '(no handler)']];
+        $('#wb').innerHTML = sample(false, 'b'); $('#wa').innerHTML = sample(true, 'a');
+        /* Fix tab: text size applies to both samples; bag size select updates the table */
+        const fixZ = () => { const z = +$('#zoom3').value; $('#zo3').textContent = z + '%'; [$('#wb'), $('#wa')].forEach(w => w.style.fontSize = (16 * z / 100) + 'px'); };
+        $('#zoom3').oninput = fixZ; $('#zr3').onclick = () => { $('#zoom3').value = 100; fixZ(); };
+        document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('select.bagsel'); if (!s) return; const sm = s.closest('.sm'), [size, price] = s.value.split('|'); $('.bsz', sm).textContent = size; $('.bpr', sm).textContent = '$' + price; });
+        $$('input[name=view]').forEach(r => r.onchange = () => { const v = $('input[name=view]:checked').value; $('#wb').hidden = v === 'a'; $('#wa').hidden = v === 'b'; });
+        $('#issues').innerHTML = IS.map((x, i) => '<article class="card" data-i="' + i + '" data-l="' + x[3] + '"><h4>' + (i + 1) + '. ' + TE(x[0]) + '<span class="lvl">' + x[3] + '</span></h4><p class="mut" style="margin:.2rem 0">SC ' + x[1] + ' ' + x[2] + '</p>'
+            + '<label><input type="checkbox" class="fnd"> Found<span class="sr">: ' + TE(x[0]) + '</span></label> <label><input type="checkbox" class="fix"> Fixed<span class="sr">: ' + TE(x[0]) + '</span></label>'
+            + '<details><summary>Details and fix</summary><p><strong>Affects:</strong> ' + TE(x[4]) + '</p><p><strong>Detect:</strong> ' + TE(x[5]) + '</p><p><strong>Fix:</strong> ' + TE(x[6]) + '</p>'
+            + '<p>Before:</p><pre><code>' + TE(x[7]) + '</code></pre><p>After:</p><pre><code>' + TE(x[8]) + '</code></pre></details></article>').join('');
+        const issueState = i => { const c = $$('#issues .card')[i]; return { found: $('.fnd', c).checked, fixed: $('.fix', c).checked }; };
+        function prog() {
+            const f = $$('.fnd:checked').length, x = $$('.fix:checked').length;
+            $('#prog').textContent = f + ' of ' + IS.length + ' issues found'; $('#pbar').value = f;
+            $('#progf').textContent = x + ' of ' + IS.length + ' issues fixed'; $('#pbarf').value = x;
+            filt();
+        }
+        function filt() {
+            const l = $('#lvl').value, s = $('#stf').value; let n = 0;
+            $$('#issues .card').forEach(c => {
+                const st = issueState(+c.dataset.i), status = st.fixed ? 'fixed' : st.found ? 'found' : 'open';
+                const show = (!l || c.dataset.l === l) && (!s || s === status); c.hidden = !show; if (show) n++;
+            });
+            $('#shown').textContent = 'Showing ' + n + ' of ' + IS.length;
+        }
+        $('#issues').addEventListener('change', prog); $('#lvl').onchange = filt; $('#stf').onchange = filt;
+        let expanded = false; $('#expand').onclick = () => { expanded = !expanded; $$('#issues details').forEach(d => d.open = expanded); $('#expand').textContent = expanded ? 'Collapse all details' : 'Expand all details'; };
+        prog();
+
+        /* ---------- Module 4: checklist and report ---------- */
+        const PR = ['Perceivable', 'Operable', 'Understandable', 'Robust'];
+        const CK = [['Perceivable', '1.1.1', 'Non-text Content'], ['Perceivable', '1.3.1', 'Info and Relationships'], ['Perceivable', '1.4.1', 'Use of Color'], ['Perceivable', '1.4.3', 'Contrast (Minimum)'], ['Perceivable', '1.4.4', 'Resize Text'], ['Perceivable', '1.4.10', 'Reflow'], ['Perceivable', '1.4.11', 'Non-text Contrast'], ['Perceivable', '1.4.12', 'Text Spacing'],
+        ['Operable', '2.1.1', 'Keyboard'], ['Operable', '2.1.2', 'No Keyboard Trap'], ['Operable', '2.4.3', 'Focus Order'], ['Operable', '2.4.4', 'Link Purpose (In Context)'], ['Operable', '2.4.7', 'Focus Visible'],
+        ['Understandable', '3.1.1', 'Language of Page'], ['Understandable', '3.3.1', 'Error Identification'], ['Understandable', '3.3.2', 'Labels or Instructions'],
+        ['Robust', '4.1.2', 'Name, Role, Value'], ['Robust', '4.1.3', 'Status Messages']];
+        $('#chk').innerHTML = PR.map(P => '<h3>' + P + '</h3>' + CK.map((c, i) => c[0] !== P ? '' :
+            '<fieldset><legend>SC ' + c[1] + ' ' + c[2] + '</legend>' + ['pass:Pass', 'fail:Fail', 'na:Not applicable'].map(o => { const [v, l] = o.split(':'); return '<label><input type="radio" name="c' + i + '" value="' + v + '"> ' + l + '</label> '; }).join('')
+            + '<div class="field"><label for="n' + i + '">Notes for SC ' + c[1] + '</label><input type="text" id="n' + i + '" style="width:100%"></div></fieldset>').join('')).join('');
+        const val = i => ($('input[name=c' + i + ']:checked') || {}).value || 'none';
+        function chsum() { let p = 0, f = 0, n = 0; CK.forEach((c, i) => { const v = val(i); if (v === 'pass') p++; else if (v === 'fail') f++; else if (v === 'na') n++; }); $('#chsum').textContent = (p + f + n) + ' of ' + CK.length + ' rated: ' + p + ' pass, ' + f + ' fail, ' + n + ' n/a'; }
+        $('#chk').addEventListener('change', chsum); chsum();
+        $('#allpass').onclick = () => { CK.forEach((c, i) => $('input[name=c' + i + '][value=pass]').checked = true); chsum(); say('All criteria marked pass.'); };
+        $('#clrchk').onclick = () => { $$('#chk input[type=radio]').forEach(r => r.checked = false); chsum(); say('Ratings cleared.'); };
+
+        const STL = { pass: '\u2714 Pass', fail: '\u2716 Fail', na: '\u2013 Not applicable', none: '\u25CB Not rated' };
+        function data() {
+            const rows = CK.map((c, i) => ({ p: c[0], sc: c[1], n: c[2], v: val(i), note: $('#n' + i).value.trim() }));
+            const iss = IS.map((x, i) => { const s = issueState(i); return { i: i + 1, t: x[0], sc: x[1], n: x[2], l: x[3], pri: x[3] === 'A' ? 'High' : 'Medium', st: s.fixed ? 'Fixed' : s.found ? 'Found, open' : 'Not reviewed' }; });
+            const cnt = v => rows.filter(r => r.v === v).length, pass = cnt('pass'), fail = cnt('fail');
+            return { when: new Date().toLocaleString(), rows, iss, pass, fail, na: cnt('na'), none: cnt('none'), rate: pass + fail ? Math.round(100 * pass / (pass + fail)) : null, found: iss.filter(x => x.st !== 'Not reviewed').length, fixed: iss.filter(x => x.st === 'Fixed').length, cr: (Math.floor(ratio(C.fg, C.bg) * 100) / 100).toFixed(2) };
+        }
+        function repHTML(d) {
+            const tile = (b, s) => '<div class="tile"><b>' + b + '</b>' + s + '</div>';
+            return '<h1 style="font:900 1.7rem/1.1 var(--sans);margin:0">Lab3-(HCI:BSAI-239) audit report</h1><p style="margin:.2rem 0" class="mut">WCAG 2.1 AA practice audit. Generated ' + TE(d.when) + '</p>'
+                + '<div class="tiles">' + tile(d.rate === null ? 'n/a' : d.rate + '%', 'pass rate of rated criteria') + tile(d.fail, 'failed criteria') + tile(d.found + '/' + d.iss.length, 'issues found') + tile(d.fixed + '/' + d.iss.length, 'issues fixed') + tile(d.cr + ':1', 'last contrast check') + '</div>'
+                + '<h3>Checklist by principle</h3>' + PR.map(P => { const r = d.rows.filter(x => x.p === P), p = r.filter(x => x.v === 'pass').length, f = r.filter(x => x.v === 'fail').length;
+                    return '<p style="margin:.6rem 0 .1rem"><strong>' + P + ':</strong> ' + p + ' pass, ' + f + ' fail, ' + r.filter(x => x.v === 'na').length + ' n/a, ' + r.filter(x => x.v === 'none').length + ' not rated</p><div class="tw"><table><thead><tr><th scope="col">SC</th><th scope="col">Criterion</th><th scope="col">Result</th><th scope="col">Notes</th></tr></thead><tbody>'
+                        + r.map(x => '<tr><td>' + x.sc + '</td><td>' + TE(x.n) + '</td><td>' + STL[x.v] + '</td><td>' + (x.note ? TE(x.note) : '<span class="mut">(none)</span>') + '</td></tr>').join('') + '</tbody></table></div>'; }).join('')
+                + '<h3>Failed items</h3>' + (d.fail ? '<ul>' + d.rows.filter(x => x.v === 'fail').map(x => '<li>SC ' + x.sc + ' ' + TE(x.n) + ': ' + TE(x.note || '(no notes)') + '</li>').join('') + '</ul>' : '<p>None recorded.</p>')
+                + '<h3>Issue tracker</h3><div class="tw"><table><thead><tr><th scope="col">#</th><th scope="col">Issue</th><th scope="col">SC</th><th scope="col">Level</th><th scope="col">Priority</th><th scope="col">Status</th></tr></thead><tbody>'
+                + d.iss.map(x => '<tr><td>' + x.i + '</td><td>' + TE(x.t) + '</td><td>' + x.sc + ' ' + TE(x.n) + '</td><td>' + x.l + '</td><td>' + x.pri + '</td><td>' + (x.st === 'Fixed' ? '\u2714 ' : x.st === 'Not reviewed' ? '\u25CB ' : '\u25D1 ') + x.st + '</td></tr>').join('') + '</tbody></table></div>'
+                + '<p class="mut" style="margin-top:1rem">Note: automated tools catch only some issues; confirm with manual and assistive technology tests.</p>';
+        }
+        function repText(d) {
+            const L = ['Lab3-(HCI:BSAI-239) audit report', 'Generated: ' + d.when, ''];
+            PR.forEach(P => { const r = d.rows.filter(x => x.p === P), p = r.filter(x => x.v === 'pass').length, f = r.filter(x => x.v === 'fail').length; L.push(P + ': ' + p + ' pass, ' + f + ' fail, ' + r.filter(x => x.v === 'na').length + ' n/a, ' + r.filter(x => x.v === 'none').length + ' not rated' + (p + f ? ' (pass rate ' + Math.round(100 * p / (p + f)) + '% of rated items)' : '')); });
+            L.push('', 'Failed items:'); const fl = d.rows.filter(x => x.v === 'fail').map(x => 'SC ' + x.sc + ' ' + x.n + ': ' + (x.note || '(no notes)')); L.push(...(fl.length ? fl : ['None recorded']));
+            L.push('', 'Issue tracker: ' + d.found + ' of ' + d.iss.length + ' found, ' + d.fixed + ' fixed'); d.iss.forEach(x => L.push('  ' + x.i + '. ' + x.t + ' (SC ' + x.sc + ', Level ' + x.l + '): ' + x.st));
+            L.push('', 'Last contrast check: ' + d.cr + ':1 (' + C.fg + ' on ' + C.bg + ')', '', 'Note: automated tools catch only some issues; confirm with manual and assistive technology tests.'); return L.join('\n');
+        }
+        $('#gen').onclick = () => { const r = $('#rep'); r.innerHTML = repHTML(data()); r.focus(); say('Report generated.'); };
+        $('#cpy').onclick = async () => { const d = data(); $('#rep').innerHTML = repHTML(d); try { await navigator.clipboard.writeText(repText(d)); $('#cpst').textContent = 'Report copied.'; } catch (e) { $('#cpst').textContent = 'Copy was blocked. Use Generate report, then select the text and copy it manually.'; } };
+        const fillPrint = () => { $('#printOut').innerHTML = repHTML(data()); };
+        $('#prt').onclick = () => { $('#rep').innerHTML = repHTML(data()); fillPrint(); window.print(); };
+        window.addEventListener('beforeprint', fillPrint);
+        /* Sliding tab indicator: place it without animating on first paint */
+        $('#maintabs').classList.add('has-ind'); tind.style.transition = 'none'; moveInd(); void tind.offsetWidth; tind.style.transition = '';
+        window.addEventListener('resize', moveInd); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { tind.style.transition = 'none'; moveInd(); void tind.offsetWidth; tind.style.transition = ''; });
+    </script>
+</body>
+
+</html>
